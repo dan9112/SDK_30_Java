@@ -180,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
 
         for (int i = 0; i < results.size(); i++) {
             ScanResult result = results.get(i);
-            sb.append("\n\n  --------- Network ").append(i).append("/").append(results.size()).append(" ---------");
+            sb.append("\n\n  --------- Network ").append(i + 1).append("/").append(results.size()).append(" ---------");
 
             sb.append("\n result.capabilities: ").append(result.capabilities);
             sb.append("\n result.SSID: ").append(result.SSID); // Network Name.
