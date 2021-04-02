@@ -1,0 +1,3 @@
+include ':wi-fiscanner'
+include ':app'
+rootProject.name = "SDK 30 Java"
