@@ -32,16 +32,52 @@ import static android.Manifest.permission.ACCESS_WIFI_STATE;
 
 public class MainActivity extends AppCompatActivity {
 
+    /**
+     * Тег логов
+     */
     private static final String LOG_TAG = "AndroidExample";
 
+    /**
+     * Код запроса проверки разрешений
+     */
     private static final int MY_REQUEST_CODE = 123;
-
+    /**
+     * Кнопка проверки состояния Wi-fi модуля
+     */
+    Button buttonState = findViewById(R.id.button_state);
+    /**
+     * Кнопка запуска сканирования всех доступных устройств
+     */
+    Button buttonScan = findViewById(R.id.button_scan);
+    /**
+     * Экземпляр класса для управления всеми аспектами подключения Wi-Fi.
+     *
+     * @see WifiManager
+     */
     private WifiManager wifiManager;
-
+    /**
+     * Окно для ввода пароля доступа к подключаемой точке доступа
+     */
     private EditText editTextPassword;
+    /**
+     * Layout со списком доступных для подключения Wi-fi сетей в виде кнопок.
+     * По нажатию на соответствующую кнопку происходит попытка подключения к указанной на кнопке
+     * точке доступа с введённым в {@link #editTextPassword} паролем
+     *
+     * @see #connectToNetwork(String, String)
+     * @see #showNetworks(List)
+     */
     private LinearLayout linearLayoutScanResults;
+    /**
+     * Текстовое окно с перечислением всех Wi-fi сетей, полученных в результате сканирования, и
+     * подробной информацией о них
+     *
+     * @see #showNetworksDetails(List)
+     */
     private TextView textViewScanResults;
-
+    /**
+     * Приёмник широковещательных сообщений. Нужен для фильтрации
+     */
     private WifiBroadcastReceiver wifiReceiver;
 
     @Override
@@ -51,32 +87,33 @@ public class MainActivity extends AppCompatActivity {
 
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
-        // Instantiate broadcast receiver
+        // Инициализация приёмника
         wifiReceiver = new WifiBroadcastReceiver();
 
-        // Register the receiver
+        // Регистрация приёмника
         registerReceiver(wifiReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-
-        //
-        Button buttonState = findViewById(R.id.button_state);
-        Button buttonScan = findViewById(R.id.button_scan);
 
         editTextPassword = findViewById(R.id.editText_password);
         textViewScanResults = findViewById(R.id.textView_scanResults);
         linearLayoutScanResults = findViewById(R.id.linearLayout_scanResults);
 
+        // Регистрация слушателей нажатия на кнопки
         buttonState.setOnClickListener(view -> showWifiState());
 
         buttonScan.setOnClickListener(view -> askAndStartScanWifi());
     }
 
-
+    /**
+     * Функция проверки разрешений и начала сканирования. Будет запрашивать у пользователя доступ к
+     * необходимым для функционирования приложения службам
+     */
     private void askAndStartScanWifi() {
 
         // With Android Level >= 23, you have to ask the user
         // for permission to Call.
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) { // 23
-            int permission1 = ContextCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION);
+            int permission1 =
+                    ContextCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION);
 
             // Check for permissions
             if (permission1 != PackageManager.PERMISSION_GRANTED) {
@@ -98,33 +135,38 @@ public class MainActivity extends AppCompatActivity {
         doStartScanWifi();
     }
 
+    /**
+     * Запуск сканирования устройств
+     */
     private void doStartScanWifi() {
         wifiManager.startScan();
     }
 
+
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         Log.d(LOG_TAG, "onRequestPermissionsResult");
 
-        if (requestCode == MY_REQUEST_CODE) {// If request is cancelled, the result arrays are empty.
+        if (requestCode == MY_REQUEST_CODE) {// Если запрос отменен, массивы результатов пусты
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // permission was granted
                 Log.d(LOG_TAG, "Permission Granted: " + permissions[0]);
 
-                // Start Scan Wifi.
                 doStartScanWifi();
             } else {
-                // Permission denied, boo! Disable the
-                // functionality that depends on this permission.
+                // В разрешении отказано, бу!Отключите функции,
+                // зависящие от этого разрешения.
                 Log.d(LOG_TAG, "Permission Denied: " + permissions[0]);
             }
-            // Other 'case' lines to check for other
-            // permissions this app might request.
         }
     }
 
+    /**
+     * Функция вывода статуса Wi-fi модуля
+     */
     private void showWifiState() {
-        int state = this.wifiManager.getWifiState();
+        int state = wifiManager.getWifiState();
         String statusInfo;
 
         switch (state) {
@@ -144,27 +186,37 @@ public class MainActivity extends AppCompatActivity {
                 statusInfo = "Unknown";
                 break;
         }
-        Toast.makeText(this, "Wifi Status: " + statusInfo, Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Wi-fi Status: " + statusInfo, Toast.LENGTH_LONG).show();
     }
 
     @Override
     protected void onStop() {
-        unregisterReceiver(this.wifiReceiver);
+        unregisterReceiver(wifiReceiver);
         super.onStop();
     }
 
+    /**
+     * Функция вывода добавления кнопок для доступа к сетям Wi-fi.
+     * На каждой кнопке указанна краткая информация о каждой из полученных в результате сканирования
+     * сетей
+     *
+     * @param results список полученыых в результате сканирования сетей
+     * @see #askAndStartScanWifi()
+     */
     private void showNetworks(List<ScanResult> results) {
+        // удаление всех виджетов из layout
         linearLayoutScanResults.removeAllViews();
 
+        // цикл создания кнопок для подключения
         for (final ScanResult result : results) {
             final String networkCapabilities = result.capabilities;
             final String networkSSID = result.SSID; // Network Name.
-            //
             Button button = new Button(this);
 
             button.setText(String.format("%s (%s)", networkSSID, networkCapabilities));
             linearLayoutScanResults.addView(button);
 
+            // добавление слушателя нажатия на кнопку
             button.setOnClickListener(view -> {
                 String networkCapabilities1 = result.capabilities;
                 connectToNetwork(networkCapabilities1, networkSSID);
@@ -172,6 +224,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Функция вывода сетей wi-fi в {@link #textViewScanResults} с подробной информацией о каждой
+     *
+     * @param results список полученыых в результате сканирования сетей
+     */
     private void showNetworksDetails(List<ScanResult> results) {
 
         textViewScanResults.setText("");
@@ -204,13 +261,19 @@ public class MainActivity extends AppCompatActivity {
                 sb.append("\n isPasspointNetwork(): ").append(result.isPasspointNetwork());
             }
         }
-        this.textViewScanResults.setText(sb.toString());
+        textViewScanResults.setText(sb.toString());
     }
 
+    /**
+     * Функция попытки подключения к выбранной точке доступа wi-fi
+     *
+     * @param networkCapabilities режим безопасности выбранной точки доступа
+     * @param networkSSID         наименование выбранной точки доступа
+     */
     private void connectToNetwork(String networkCapabilities, String networkSSID) {
         Toast.makeText(this, "Connecting to network: " + networkSSID, Toast.LENGTH_SHORT).show();
 
-        String networkPass = this.editTextPassword.getText().toString();
+        String networkPass = editTextPassword.getText().toString();
 
         WifiConfiguration wifiConfig = new WifiConfiguration();
         wifiConfig.SSID = "\"" + networkSSID + "\"";
@@ -230,7 +293,7 @@ public class MainActivity extends AppCompatActivity {
             wifiConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
         }
 
-        this.wifiManager.addNetwork(wifiConfig);
+        wifiManager.addNetwork(wifiConfig);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -246,7 +309,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Define class to listen to broadcasts
+    /**
+     * Класс для прослушивания широковещательных сообщений
+     */
     class WifiBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -261,8 +326,8 @@ public class MainActivity extends AppCompatActivity {
 
                 List<ScanResult> list = wifiManager.getScanResults();
 
-                MainActivity.this.showNetworks(list);
-                MainActivity.this.showNetworksDetails(list);
+                showNetworks(list);
+                showNetworksDetails(list);
             } else {
                 Log.d(LOG_TAG, "Scan not OK");
             }
