@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(LOG_TAG, "Permission Granted: " + permissions[0]);
 
                 // Start Scan Wifi.
-                this.doStartScanWifi();
+                doStartScanWifi();
             } else {
                 // Permission denied, boo! Disable the
                 // functionality that depends on this permission.
@@ -149,12 +149,12 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-        this.unregisterReceiver(this.wifiReceiver);
+        unregisterReceiver(this.wifiReceiver);
         super.onStop();
     }
 
     private void showNetworks(List<ScanResult> results) {
-        this.linearLayoutScanResults.removeAllViews();
+        linearLayoutScanResults.removeAllViews();
 
         for (final ScanResult result : results) {
             final String networkCapabilities = result.capabilities;
@@ -163,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
             Button button = new Button(this);
 
             button.setText(String.format("%s (%s)", networkSSID, networkCapabilities));
-            this.linearLayoutScanResults.addView(button);
+            linearLayoutScanResults.addView(button);
 
             button.setOnClickListener(view -> {
                 String networkCapabilities1 = result.capabilities;
@@ -174,34 +174,34 @@ public class MainActivity extends AppCompatActivity {
 
     private void showNetworksDetails(List<ScanResult> results) {
 
-        this.textViewScanResults.setText("");
+        textViewScanResults.setText("");
         StringBuilder sb = new StringBuilder();
-        sb.append("Result Count: ").append(results.size());
+        sb.append("Networks count: ").append(results.size());
 
         for (int i = 0; i < results.size(); i++) {
             ScanResult result = results.get(i);
             sb.append("\n\n  --------- Network ").append(i + 1).append("/").append(results.size()).append(" ---------");
 
-            sb.append("\n result.capabilities: ").append(result.capabilities);
-            sb.append("\n result.SSID: ").append(result.SSID); // Network Name.
+            sb.append("\n capabilities: ").append(result.capabilities);
+            sb.append("\n SSID: ").append(result.SSID); // Network Name.
 
-            sb.append("\n result.BSSID: ").append(result.BSSID);
-            sb.append("\n result.frequency: ").append(result.frequency);
-            sb.append("\n result.level: ").append(result.level);
+            sb.append("\n BSSID: ").append(result.BSSID);
+            sb.append("\n frequency: ").append(result.frequency);
+            sb.append("\n level: ").append(result.level);
 
-            sb.append("\n result.describeContents(): ").append(result.describeContents());
+            sb.append("\n describeContents(): ").append(result.describeContents());
 
             // Level >17, Android 4.2
-            sb.append("\n result.timestamp: ").append(result.timestamp);
+            sb.append("\n timestamp: ").append(result.timestamp);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) { // Level 23, Android 6.0
-                sb.append("\n result.centerFreq0: ").append(result.centerFreq0);
-                sb.append("\n result.centerFreq1: ").append(result.centerFreq1);
-                sb.append("\n result.venueName: ").append(result.venueName);
-                sb.append("\n result.operatorFriendlyName: ").append(result.operatorFriendlyName);
-                sb.append("\n result.channelWidth: ").append(result.channelWidth);
-                sb.append("\n result.is80211mcResponder(): ").append(result.is80211mcResponder());
-                sb.append("\n result.isPasspointNetwork(): ").append(result.isPasspointNetwork());
+                sb.append("\n centerFreq0: ").append(result.centerFreq0);
+                sb.append("\n centerFreq1: ").append(result.centerFreq1);
+                sb.append("\n venueName: ").append(result.venueName);
+                sb.append("\n operatorFriendlyName: ").append(result.operatorFriendlyName);
+                sb.append("\n channelWidth: ").append(result.channelWidth);
+                sb.append("\n is80211mcResponder(): ").append(result.is80211mcResponder());
+                sb.append("\n isPasspointNetwork(): ").append(result.isPasspointNetwork());
             }
         }
         this.textViewScanResults.setText(sb.toString());
